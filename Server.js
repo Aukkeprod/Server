@@ -7,9 +7,9 @@ app.use(express.json());
 // -------------------------------
 // CONFIG
 // -------------------------------
-const API_TOKEN = "ProspectScanVR88X2";
-const SERPAPI_KEY = "7e6d4c3b17383f9172ab76133c8a6e63a6d869ab513d67c54427947050bf5983";
-const MAX_RESULTS = 30;
+const API_TOKEN = process.env.API_TOKEN;
+const SERPAPI_KEY = process.env.SERPAPI_KEY;
+const MAX_RESULTS = 100;
 
 // -------------------------------
 // ROUTE PRINCIPALE
