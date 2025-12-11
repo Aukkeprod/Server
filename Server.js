@@ -20,11 +20,31 @@ app.get("/search", async (req, res) => {
     const q = req.query.q || "agence événementielle france";
     const limit = Math.min(parseInt(req.query.limit || 10), MAX_RESULTS);
 
-    if (token !== API_TOKEN) {
-      return res.json({ error: true, message: "Invalid token", results: [] });
+    // -----------------------------
+    // Vérification token
+    // -----------------------------
+    if (!token || token !== API_TOKEN) {
+      return res.json({
+        error: true,
+        message: "Invalid token",
+        results: []
+      });
     }
 
-    // SerpAPI
+    // -----------------------------
+    // Vérification clé SerpAPI
+    // -----------------------------
+    if (!SERPAPI_KEY) {
+      return res.json({
+        error: true,
+        message: "Missing SERPAPI_KEY on server",
+        results: []
+      });
+    }
+
+    // -----------------------------
+    // Requête SerpAPI
+    // -----------------------------
     const serpURL =
       `https://serpapi.com/search.json?engine=google&q=${encodeURIComponent(q)}` +
       `&num=${limit}&hl=fr&api_key=${SERPAPI_KEY}`;
@@ -32,7 +52,22 @@ app.get("/search", async (req, res) => {
     const serpRes = await fetch(serpURL);
     const serpData = await serpRes.json();
 
-    if (!serpData.organic_results) {
+    // -----------------------------
+    // Erreur renvoyée par SerpAPI
+    // -----------------------------
+    if (serpData.error) {
+      return res.json({
+        error: true,
+        message: `SerpAPI error: ${serpData.error}`,
+        query: q,
+        results: []
+      });
+    }
+
+    // -----------------------------
+    // Résultats vides
+    // -----------------------------
+    if (!serpData.organic_results || serpData.organic_results.length === 0) {
       return res.json({
         error: true,
         message: "SerpAPI returned nothing.",
@@ -41,6 +76,9 @@ app.get("/search", async (req, res) => {
       });
     }
 
+    // -----------------------------
+    // Réponse finale
+    // -----------------------------
     return res.json({
       error: false,
       query: q,
@@ -52,7 +90,7 @@ app.get("/search", async (req, res) => {
   } catch (e) {
     return res.json({
       error: true,
-      message: "Worker crashed: " + e.message,
+      message: "Server crashed: " + e.message,
       results: []
     });
   }
